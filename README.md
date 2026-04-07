@@ -52,6 +52,18 @@ findbiz taxid 90581366 --json
 | `--alive` | 僅顯示登記現況為「核准設立」的結果 |
 | `--type <types>` | 篩選資料種類，逗號分隔（公司,分公司,商業,工廠,有限合夥） |
 
+## Claude Code Agent Skill
+
+安裝 skill 後，Claude Code 會在你提到「查統編」、「查公司」等關鍵字時自動觸發查詢。
+
+```bash
+# 安裝到 user scope（所有專案共用）
+npx github:lyhcode/findbiz-cli install-skill --user
+
+# 安裝到 project scope（僅限當前專案）
+npx github:lyhcode/findbiz-cli install-skill --project
+```
+
 ## 作為函式庫使用
 
 ```typescript

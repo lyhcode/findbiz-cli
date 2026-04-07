@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { existsSync, mkdirSync, cpSync, realpathSync } from 'node:fs';
+import { resolve, dirname, join } from 'node:path';
+import { homedir } from 'node:os';
 import { Command } from 'commander';
 import { FindBizClient } from './client.js';
 import type { DataType, FindBizResult } from './types.js';
@@ -184,6 +187,45 @@ program
       console.error(`✗ 查詢失敗: ${error instanceof Error ? error.message : String(error)}`);
       process.exit(1);
     }
+  });
+
+// install-skill
+program
+  .command('install-skill')
+  .description('安裝 Claude Code agent skill')
+  .option('--user', '安裝到 user scope (~/.claude/skills/)')
+  .option('--project [path]', '安裝到 project scope (.claude/skills/)')
+  .action((opts: { user?: boolean; project?: boolean | string }) => {
+    // 找到 skills/findbiz 來源目錄（相容 ESM 和 CJS）
+    const scriptPath = realpathSync(process.argv[1]);
+    const currentDir = dirname(scriptPath);
+    const candidates = [
+      resolve(currentDir, '..', 'skills', 'findbiz'),
+      resolve(currentDir, '..', '..', 'skills', 'findbiz'),
+    ];
+    const src = candidates.find((p) => existsSync(p));
+
+    if (!src) {
+      console.error('✗ 找不到 skill 檔案，請確認套件完整性');
+      process.exit(1);
+    }
+
+    const isUser = opts.user || !opts.project;
+
+    let dest: string;
+    if (isUser) {
+      dest = join(homedir(), '.claude', 'skills', 'findbiz');
+    } else {
+      const projectRoot = typeof opts.project === 'string' ? opts.project : process.cwd();
+      dest = join(projectRoot, '.claude', 'skills', 'findbiz');
+    }
+
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { recursive: true, force: true });
+
+    const scope = isUser ? 'user' : 'project';
+    console.log(`✓ Skill 已安裝至 ${scope} scope`);
+    console.log(`  ${dest}/SKILL.md`);
   });
 
 program.parse();
