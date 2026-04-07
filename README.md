@@ -30,6 +30,17 @@ findbiz detail 54891351 --json          # JSON 格式輸出
 ```bash
 findbiz address '臺中市西區和龍里臺灣大道二段２號１６樓之２'
 findbiz addr '臺中市西區' --alive --json  # alias + 篩選
+findbiz addr '臺北市信義區' --all         # 取得所有分頁結果
+```
+
+### `rep` — 代表人查詢
+
+以代表人姓名查詢其名下公司與商業。
+
+```bash
+findbiz rep '王小明'
+findbiz rep '王小明' --alive --type 公司 --json
+findbiz rep '王小明' --all               # 取得所有分頁結果
 ```
 
 ### `search` — 通用搜尋
@@ -67,8 +78,10 @@ findbiz taxid 90581366 --json
 | 選項 | 說明 |
 |------|------|
 | `--json` | 輸出 JSON 格式（所有指令皆支援） |
-| `--alive` | 僅顯示登記現況為「核准設立」的結果（search, name, address） |
-| `--type <types>` | 篩選資料種類，逗號分隔：公司,分公司,商業,工廠,有限合夥（search, address） |
+| `--alive` | 僅顯示登記現況為「核准設立」的結果（search, name, address, rep） |
+| `--type <types>` | 篩選資料種類，逗號分隔：公司,分公司,商業,工廠,有限合夥（search, address, rep） |
+| `--page <n>` | 指定頁碼（search, address, rep） |
+| `--all` | 取得所有分頁結果（search, address, rep） |
 
 ## Claude Code Agent Skill
 

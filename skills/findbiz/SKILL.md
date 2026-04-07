@@ -21,6 +21,15 @@ npx -y github:lyhcode/findbiz-cli detail 12345678 --json
 ```bash
 npx -y github:lyhcode/findbiz-cli address '臺中市西區和龍里臺灣大道二段２號１６樓之２' --json
 npx -y github:lyhcode/findbiz-cli address '臺北市信義區' --alive --json  # 僅核准設立
+npx -y github:lyhcode/findbiz-cli address '臺北市信義區' --all --json   # 取得所有分頁
+```
+
+### 以代表人查詢
+
+```bash
+npx -y github:lyhcode/findbiz-cli rep '王小明' --json
+npx -y github:lyhcode/findbiz-cli rep '王小明' --alive --type 公司 --json
+npx -y github:lyhcode/findbiz-cli rep '王小明' --all --json  # 取得所有分頁
 ```
 
 ### 以名稱查統編

@@ -99,6 +99,10 @@ export interface FindBizResponse {
   query: string;
   /** 總筆數 */
   total: number;
+  /** 當前頁碼 */
+  currentPage: number;
+  /** 總頁數 */
+  totalPages: number;
   /** 結果列表 */
   results: FindBizResult[];
 }
@@ -120,4 +124,6 @@ export interface FindBizOptions {
   status?: 'alive' | 'other' | 'all';
   /** 搜尋模式，預設 'name' */
   mode?: SearchMode;
+  /** 指定頁碼（從 1 開始），預設 1 */
+  page?: number;
 }

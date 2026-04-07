@@ -66,6 +66,39 @@ export class FindBizClient {
 
   /** 查詢商工登記資料 */
   async search(query: string, options?: FindBizOptions): Promise<FindBizResponse> {
+    const mode = options?.mode ?? 'name';
+    const html = await this.doSearch(query, options);
+    const response = this.parseResults(query, html, mode);
+
+    // 若指定頁碼且不是第 1 頁，透過分頁表單翻頁
+    if (options?.page && options.page > 1 && response.totalPages > 1) {
+      return this.fetchPage(html, query, options.page, mode, options);
+    }
+
+    return response;
+  }
+
+  /** 查詢所有分頁結果 */
+  async searchAll(query: string, options?: FindBizOptions): Promise<FindBizResponse> {
+    const mode = options?.mode ?? 'name';
+    // 取得第 1 頁 HTML
+    const firstHtml = await this.doSearch(query, options);
+    const first = this.parseResults(query, firstHtml, mode);
+    if (first.totalPages <= 1) return first;
+
+    const allResults = [...first.results];
+
+    // 逐頁翻頁
+    for (let page = 2; page <= first.totalPages; page++) {
+      const pageResponse = await this.fetchPage(firstHtml, query, page, mode, options);
+      allResults.push(...pageResponse.results);
+    }
+
+    return { query, total: first.total, currentPage: 1, totalPages: 1, results: allResults };
+  }
+
+  /** 執行搜尋並回傳原始 HTML */
+  private async doSearch(query: string, options?: FindBizOptions): Promise<string> {
     await this.initSession();
     await randomDelay();
     rotateUA(this.client);
@@ -74,7 +107,6 @@ export class FindBizClient {
     const isAlive =
       options?.status === 'alive' ? 'true' : options?.status === 'other' ? 'false' : 'all';
 
-    // 組裝 form data
     const params = new URLSearchParams();
     params.append('qryCond', query);
     for (const t of types) {
@@ -90,8 +122,39 @@ export class FindBizClient {
         Referer: BASE_URL + INIT_PATH,
       },
     });
+    return html;
+  }
 
-    return this.parseResults(query, html);
+  /** 透過分頁表單取得指定頁碼 */
+  private async fetchPage(searchHtml: string, query: string, page: number, mode: SearchMode = 'name', options?: FindBizOptions): Promise<FindBizResponse> {
+    const $ = cheerio.load(searchHtml);
+
+    // 從 pageForm (#QueryList_queryList) 擷取隱藏欄位
+    const pageParams = new URLSearchParams();
+    $('#QueryList_queryList input').each((_i, el) => {
+      const name = $(el).attr('name');
+      const value = $(el).attr('value') || '';
+      if (name) pageParams.append(name, value);
+    });
+    pageParams.set('pagingModel.currentPage', String(page));
+
+    // 填入資料種類篩選（pageForm 不會自動帶這些值）
+    const types = options?.types ?? ALL_TYPES;
+    for (const t of types) {
+      pageParams.set(`model.${TYPE_MAP[t]}`, 'true');
+    }
+
+    await randomDelay();
+    rotateUA(this.client);
+
+    const { data: html } = await this.client.post<string>(LIST_PATH, pageParams.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Referer: BASE_URL + LIST_PATH,
+      },
+    });
+
+    return this.parseResults(query, html, mode);
   }
 
   /** 以統一編號查詢詳細資料（自動搜尋 → 取得詳細頁面） */
@@ -116,10 +179,13 @@ export class FindBizClient {
     return this.parseDetail(html, dataType);
   }
 
-  private parseResults(query: string, html: string): FindBizResponse {
+  private parseResults(query: string, html: string, mode: SearchMode = 'name'): FindBizResponse {
     const $ = cheerio.load(html);
 
     const results: FindBizResult[] = [];
+
+    // 代表人/董監事搜尋的表格欄位不同：第 5 欄為人名，第 6 欄為核准變更日期
+    const isPersonSearch = mode === 'representative' || mode === 'director';
 
     $('#eslist-table tbody tr').each((_i, tr) => {
       const cells = $(tr).find('td');
@@ -130,8 +196,8 @@ export class FindBizClient {
       const taxId = cells.eq(2).text().trim();
       const name = cells.eq(3).text().trim();
       const status = cells.eq(4).text().trim();
-      const establishDate = cells.eq(5).text().trim();
-      const changeDate = cells.eq(6).text().trim();
+      const establishDate = isPersonSearch ? '' : cells.eq(5).text().trim();
+      const changeDate = isPersonSearch ? cells.eq(6).text().trim() : cells.eq(6).text().trim();
 
       // 擷取詳細頁面連結
       const detailAnchor = $(tr).find('a.hover');
@@ -140,12 +206,15 @@ export class FindBizClient {
       results.push({ dataType, authority, taxId, name, status, establishDate, changeDate, detailUrl });
     });
 
-    // 解析總筆數
+    // 解析總筆數與分頁資訊
     const totalText = $('#lblBottomTotal').parent().text();
     const totalMatch = totalText.match(/共\s*(\d+)/);
     const total = totalMatch ? parseInt(totalMatch[1], 10) : results.length;
 
-    return { query, total, results };
+    const currentPage = parseInt($('input[name="pagingModel.currentPage"]').val() as string, 10) || 1;
+    const totalPages = parseInt($('input[name="pagingModel.totalPage"]').val() as string, 10) || 1;
+
+    return { query, total, currentPage, totalPages, results };
   }
 
   private parseDetail(html: string, dataType: DataType): FindBizDetail {

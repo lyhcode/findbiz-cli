@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { FindBizClient } from './client.js';
-import type { DataType, FindBizDetail, FindBizResult } from './types.js';
+import type { DataType, FindBizDetail, FindBizResponse, FindBizResult } from './types.js';
 
 const VERSION = '0.1.0';
 
@@ -78,7 +78,9 @@ program
   .option('--json', '輸出 JSON 格式')
   .option('--alive', '僅顯示核准設立')
   .option('--type <types>', '資料種類（逗號分隔：公司,分公司,商業,工廠,有限合夥）')
-  .action(async (query: string, opts: { json?: boolean; alive?: boolean; type?: string }) => {
+  .option('--page <n>', '指定頁碼')
+  .option('--all', '取得所有分頁結果')
+  .action(async (query: string, opts: { json?: boolean; alive?: boolean; type?: string; page?: string; all?: boolean }) => {
     try {
       const client = new FindBizClient();
 
@@ -86,23 +88,20 @@ program
         ? (opts.type.split(',').map((t) => t.trim()) as DataType[])
         : undefined;
 
-      const response = await client.search(query, {
+      const searchOpts = {
         types,
-        status: opts.alive ? 'alive' : 'all',
-      });
+        status: opts.alive ? 'alive' as const : 'all' as const,
+        page: opts.page ? parseInt(opts.page, 10) : undefined,
+      };
+
+      const response = opts.all
+        ? await client.searchAll(query, searchOpts)
+        : await client.search(query, searchOpts);
 
       if (opts.json) {
-        const output = {
-          ...response,
-          results: response.results.map((r) => ({
-            ...r,
-            establishDate: rocToDate(r.establishDate),
-            changeDate: rocToDate(r.changeDate),
-          })),
-        };
-        console.log(JSON.stringify(output, null, 2));
+        console.log(JSON.stringify(formatResponse(response), null, 2));
       } else {
-        console.log(`查詢「${response.query}」共 ${response.total} 筆\n`);
+        printResponseHeader(response);
         printTable(response.results);
       }
     } catch (error) {
@@ -133,7 +132,7 @@ program
         }));
         console.log(JSON.stringify(output, null, 2));
       } else {
-        console.log(`查詢「${query}」共 ${response.total} 筆\n`);
+        printResponseHeader(response);
         for (const r of response.results) {
           console.log(`  ${r.taxId}  ${r.name}  [${r.dataType}] ${r.status}`);
         }
@@ -193,7 +192,9 @@ program
   .option('--json', '輸出 JSON 格式')
   .option('--alive', '僅顯示核准設立')
   .option('--type <types>', '資料種類（逗號分隔：公司,分公司,商業,工廠,有限合夥）')
-  .action(async (address: string, opts: { json?: boolean; alive?: boolean; type?: string }) => {
+  .option('--page <n>', '指定頁碼')
+  .option('--all', '取得所有分頁結果')
+  .action(async (address: string, opts: { json?: boolean; alive?: boolean; type?: string; page?: string; all?: boolean }) => {
     try {
       const client = new FindBizClient();
 
@@ -201,24 +202,60 @@ program
         ? (opts.type.split(',').map((t) => t.trim()) as DataType[])
         : undefined;
 
-      const response = await client.search(address, {
+      const searchOpts = {
         types,
-        status: opts.alive ? 'alive' : 'all',
-        mode: 'address',
-      });
+        status: opts.alive ? 'alive' as const : 'all' as const,
+        mode: 'address' as const,
+        page: opts.page ? parseInt(opts.page, 10) : undefined,
+      };
+
+      const response = opts.all
+        ? await client.searchAll(address, searchOpts)
+        : await client.search(address, searchOpts);
 
       if (opts.json) {
-        const output = {
-          ...response,
-          results: response.results.map((r) => ({
-            ...r,
-            establishDate: rocToDate(r.establishDate),
-            changeDate: rocToDate(r.changeDate),
-          })),
-        };
-        console.log(JSON.stringify(output, null, 2));
+        console.log(JSON.stringify(formatResponse(response), null, 2));
       } else {
-        console.log(`查詢地址「${address}」共 ${response.total} 筆\n`);
+        printResponseHeader(response);
+        printTable(response.results);
+      }
+    } catch (error) {
+      console.error(`✗ 查詢失敗: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('rep <name>')
+  .description('以代表人姓名查詢公司')
+  .option('--json', '輸出 JSON 格式')
+  .option('--alive', '僅顯示核准設立')
+  .option('--type <types>', '資料種類（逗號分隔：公司,分公司,商業,工廠,有限合夥）')
+  .option('--page <n>', '指定頁碼')
+  .option('--all', '取得所有分頁結果')
+  .action(async (name: string, opts: { json?: boolean; alive?: boolean; type?: string; page?: string; all?: boolean }) => {
+    try {
+      const client = new FindBizClient();
+
+      const types = opts.type
+        ? (opts.type.split(',').map((t) => t.trim()) as DataType[])
+        : undefined;
+
+      const searchOpts = {
+        types,
+        status: opts.alive ? 'alive' as const : 'all' as const,
+        mode: 'representative' as const,
+        page: opts.page ? parseInt(opts.page, 10) : undefined,
+      };
+
+      const response = opts.all
+        ? await client.searchAll(name, searchOpts)
+        : await client.search(name, searchOpts);
+
+      if (opts.json) {
+        console.log(JSON.stringify(formatResponse(response), null, 2));
+      } else {
+        printResponseHeader(response);
         printTable(response.results);
       }
     } catch (error) {
@@ -259,6 +296,24 @@ program
   });
 
 program.parse();
+
+function formatResponse(response: FindBizResponse) {
+  return {
+    ...response,
+    results: response.results.map((r) => ({
+      ...r,
+      establishDate: rocToDate(r.establishDate),
+      changeDate: rocToDate(r.changeDate),
+    })),
+  };
+}
+
+function printResponseHeader(response: FindBizResponse) {
+  const pageInfo = response.totalPages > 1
+    ? `（第 ${response.currentPage}/${response.totalPages} 頁）`
+    : '';
+  console.log(`查詢「${response.query}」共 ${response.total} 筆${pageInfo}\n`);
+}
 
 function printDetail(d: FindBizDetail) {
   console.log(`✓ ${d.taxId}  ${d.name}`);
