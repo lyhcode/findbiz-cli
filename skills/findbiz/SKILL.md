@@ -10,6 +10,12 @@ tools: Bash
 
 ## 使用方式
 
+### 以統編查詳細資料（推薦）
+
+```bash
+npx -y github:lyhcode/findbiz-cli detail 12345678 --json
+```
+
 ### 以名稱查統編
 
 ```bash
@@ -32,6 +38,27 @@ npx -y github:lyhcode/findbiz-cli search '關鍵字' --alive --json  # 僅核准
 ## 輸出格式
 
 一律使用 `--json` 取得結構化資料方便後續處理。
+
+**detail 指令回傳（完整詳細資料）：**
+```json
+{
+  "dataType": "公司",
+  "taxId": "90581366",
+  "status": "核准設立",
+  "name": "蘿蔔科技股份有限公司",
+  "englishName": "TURNIP CO., LTD.",
+  "capital": "1,000,000",
+  "paidInCapital": "1,000,000",
+  "representative": "王小明",
+  "address": "臺中市西區...",
+  "authority": "臺中市政府",
+  "establishDate": "111年01月11日",
+  "changeDate": "114年08月14日",
+  "businessItems": [{ "code": "I301010", "name": "資訊軟體服務業" }],
+  "directors": [{ "seq": "0001", "title": "董事長", "name": "王小明", "representedEntity": "", "shares": "100,000" }],
+  "managers": []
+}
+```
 
 **name 指令回傳：**
 ```json

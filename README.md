@@ -14,6 +14,15 @@ npx github:lyhcode/findbiz-cli search '蘿蔔科技'
 
 ## 指令
 
+### `detail` — 詳細資料查詢
+
+以統一編號查詢完整公司資料，包含資本額、代表人、地址、營業項目、董監事等。
+
+```bash
+findbiz detail 54891351
+findbiz detail 54891351 --json          # JSON 格式輸出
+```
+
 ### `search` — 通用搜尋
 
 以名稱或統一編號搜尋，表格格式輸出。
@@ -48,9 +57,9 @@ findbiz taxid 90581366 --json
 
 | 選項 | 說明 |
 |------|------|
-| `--json` | 輸出 JSON 格式 |
-| `--alive` | 僅顯示登記現況為「核准設立」的結果 |
-| `--type <types>` | 篩選資料種類，逗號分隔（公司,分公司,商業,工廠,有限合夥） |
+| `--json` | 輸出 JSON 格式（所有指令皆支援） |
+| `--alive` | 僅顯示登記現況為「核准設立」的結果（search, name） |
+| `--type <types>` | 篩選資料種類，逗號分隔：公司,分公司,商業,工廠,有限合夥（search） |
 
 ## Claude Code Agent Skill
 
@@ -70,10 +79,16 @@ npx skills add lyhcode/findbiz-cli -g
 import { FindBizClient } from 'findbiz-cli';
 
 const client = new FindBizClient();
+// 搜尋
 const result = await client.search('蘿蔔科技');
-
 console.log(result.total);    // 1
 console.log(result.results);  // [{ taxId: '90581366', name: '蘿蔔科技股份有限公司', ... }]
+
+// 查詢詳細資料
+const detail = await client.detail('90581366');
+console.log(detail?.name);           // '蘿蔔科技股份有限公司'
+console.log(detail?.representative); // '王小明'
+console.log(detail?.businessItems);  // [{ code: 'I301010', name: '資訊軟體服務業' }, ...]
 ```
 
 ## License

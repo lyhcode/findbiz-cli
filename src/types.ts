@@ -17,6 +17,80 @@ export interface FindBizResult {
   establishDate: string;
   /** 核准變更日期（民國年 YYYMMDD） */
   changeDate: string;
+  /** 詳細資料頁面路徑 */
+  detailUrl?: string;
+}
+
+/** 營業項目 */
+export interface BusinessItem {
+  /** 代碼 */
+  code: string;
+  /** 名稱 */
+  name: string;
+}
+
+/** 董監事資料 */
+export interface Director {
+  /** 序號 */
+  seq: string;
+  /** 職稱 */
+  title: string;
+  /** 姓名 */
+  name: string;
+  /** 所代表法人 */
+  representedEntity: string;
+  /** 持有股份數(股) */
+  shares: string;
+}
+
+/** 經理人資料 */
+export interface Manager {
+  /** 序號 */
+  seq: string;
+  /** 姓名 */
+  name: string;
+  /** 到職日期 */
+  startDate: string;
+}
+
+/** 公司/商業詳細資料 */
+export interface FindBizDetail {
+  /** 資料種類 */
+  dataType: DataType;
+  /** 統一編號 */
+  taxId: string;
+  /** 登記現況 */
+  status: string;
+  /** 名稱 */
+  name: string;
+  /** 外文名稱 */
+  englishName?: string;
+  /** 資本總額(元) */
+  capital?: string;
+  /** 實收資本額(元) */
+  paidInCapital?: string;
+  /** 每股金額(元) */
+  parValue?: string;
+  /** 已發行股份總數(股) */
+  sharesIssued?: string;
+  /** 代表人/負責人姓名 */
+  representative?: string;
+  /** 所在地 */
+  address?: string;
+  /** 登記機關 */
+  authority?: string;
+  /** 核准設立日期 */
+  establishDate?: string;
+  /** 最後核准變更日期 */
+  changeDate?: string;
+  /** 組織類型（商業） */
+  organizationType?: string;
+  /** 所營事業資料 */
+  businessItems?: BusinessItem[];
+  /** 董監事資料（公司） */
+  directors?: Director[];
+  /** 經理人資料（公司） */
+  managers?: Manager[];
 }
 
 /** 查詢回應 */

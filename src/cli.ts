@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { FindBizClient } from './client.js';
-import type { DataType, FindBizResult } from './types.js';
+import type { DataType, FindBizDetail, FindBizResult } from './types.js';
 
 const VERSION = '0.1.0';
 
@@ -186,4 +186,73 @@ program
     }
   });
 
+program
+  .command('detail <taxId>')
+  .alias('d')
+  .description('以統一編號查詢公司詳細資料（含資本額、代表人、地址、營業項目等）')
+  .option('--json', '輸出 JSON 格式')
+  .action(async (taxId: string, opts: { json?: boolean }) => {
+    try {
+      if (!/^\d{8}$/.test(taxId)) {
+        console.error('✗ 統一編號格式錯誤：需為 8 位數字');
+        process.exit(1);
+      }
+
+      const client = new FindBizClient();
+      const detail = await client.detail(taxId);
+
+      if (!detail) {
+        console.log(`✗ 查無統一編號 ${taxId} 的詳細資料`);
+        process.exit(1);
+      }
+
+      if (opts.json) {
+        console.log(JSON.stringify(detail, null, 2));
+      } else {
+        printDetail(detail);
+      }
+    } catch (error) {
+      console.error(`✗ 查詢失敗: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  });
+
 program.parse();
+
+function printDetail(d: FindBizDetail) {
+  console.log(`✓ ${d.taxId}  ${d.name}`);
+  console.log(`  種類: ${d.dataType}  現況: ${d.status}`);
+  if (d.englishName) console.log(`  外文名稱: ${d.englishName}`);
+  if (d.representative) console.log(`  代表人: ${d.representative}`);
+  if (d.capital) console.log(`  資本總額: ${d.capital}`);
+  if (d.paidInCapital) console.log(`  實收資本額: ${d.paidInCapital}`);
+  if (d.parValue) console.log(`  每股金額: ${d.parValue}`);
+  if (d.sharesIssued) console.log(`  已發行股份: ${d.sharesIssued}`);
+  if (d.organizationType) console.log(`  組織類型: ${d.organizationType}`);
+  if (d.address) console.log(`  地址: ${d.address}`);
+  if (d.authority) console.log(`  機關: ${d.authority}`);
+  if (d.establishDate) console.log(`  設立: ${d.establishDate}`);
+  if (d.changeDate) console.log(`  變更: ${d.changeDate}`);
+
+  if (d.directors && d.directors.length > 0) {
+    console.log(`\n  董監事:`);
+    for (const dir of d.directors) {
+      const entity = dir.representedEntity ? ` (${dir.representedEntity})` : '';
+      console.log(`    ${dir.title}  ${dir.name}${entity}  持股 ${dir.shares}`);
+    }
+  }
+
+  if (d.managers && d.managers.length > 0) {
+    console.log(`\n  經理人:`);
+    for (const mgr of d.managers) {
+      console.log(`    ${mgr.name}  到職 ${mgr.startDate}`);
+    }
+  }
+
+  if (d.businessItems && d.businessItems.length > 0) {
+    console.log(`\n  營業項目:`);
+    for (const item of d.businessItems) {
+      console.log(`    ${item.code}  ${item.name}`);
+    }
+  }
+}
