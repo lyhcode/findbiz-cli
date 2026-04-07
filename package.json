@@ -1,0 +1,68 @@
+{
+  "name": "findbiz-cli",
+  "version": "0.1.0",
+  "description": "台灣商工登記公示資料查詢 CLI — 支援公司名稱與統一編號雙向查詢",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "bin": {
+    "findbiz": "./dist/cjs/cli.js",
+    "findbiz-cli": "./dist/cjs/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && npm run build:cjs:fixup && chmod +x ./dist/cjs/cli.js",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs:fixup": "echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
+    "dev": "tsx src/cli.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "taiwan",
+    "business-registration",
+    "findbiz",
+    "gcis",
+    "統一編號",
+    "營業登記",
+    "商工登記",
+    "cli"
+  ],
+  "author": "Monospace Taiwan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lyhcode/findbiz-cli.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "axios-cookiejar-support": "^6.0.5",
+    "cheerio": "^1.0.0",
+    "commander": "^12.1.0",
+    "tough-cookie": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
+  }
+}
