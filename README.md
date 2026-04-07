@@ -54,14 +54,14 @@ findbiz taxid 90581366 --json
 
 ## Claude Code Agent Skill
 
-安裝 skill 後，Claude Code 會在你提到「查統編」、「查公司」等關鍵字時自動觸發查詢。
+透過 [skills](https://github.com/vercel-labs/skills) 安裝 agent skill，安裝後 Claude Code 會在你提到「查統編」、「查公司」、「營業登記」等關鍵字時自動觸發查詢。
 
 ```bash
-# 安裝到 user scope（所有專案共用）
-npx github:lyhcode/findbiz-cli install-skill --user
+# 安裝 skill
+npx skills add lyhcode/findbiz-cli
 
-# 安裝到 project scope（僅限當前專案）
-npx github:lyhcode/findbiz-cli install-skill --project
+# 安裝到全域（所有專案共用）
+npx skills add lyhcode/findbiz-cli -g
 ```
 
 ## 作為函式庫使用
