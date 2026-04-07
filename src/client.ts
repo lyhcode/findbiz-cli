@@ -12,6 +12,7 @@ import type {
   FindBizResponse,
   FindBizResult,
   Manager,
+  SearchMode,
 } from './types.js';
 
 const BASE_URL = 'https://findbiz.nat.gov.tw';
@@ -27,6 +28,14 @@ const TYPE_MAP: Record<DataType, string> = {
 };
 
 const ALL_TYPES: DataType[] = ['公司', '分公司', '商業', '工廠', '有限合夥'];
+
+const MODE_MAP: Record<SearchMode, string> = {
+  name: 'D',
+  address: 'A',
+  representative: 'N',
+  director: 'DSM',
+  english: 'CNF',
+};
 
 export class FindBizClient {
   private client: AxiosInstance;
@@ -73,7 +82,7 @@ export class FindBizClient {
       params.append(TYPE_MAP[t], 'true');
     }
     params.append('isAlive', isAlive);
-    params.append('infoType', 'D');
+    params.append('infoType', MODE_MAP[options?.mode ?? 'name']);
 
     const { data: html } = await this.client.post<string>(LIST_PATH, params.toString(), {
       headers: {

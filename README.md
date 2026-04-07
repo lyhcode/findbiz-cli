@@ -2,7 +2,7 @@
 
 台灣商工登記公示資料查詢 CLI，資料來源為經濟部[商工登記公示資料查詢服務](https://findbiz.nat.gov.tw/)。
 
-支援**公司名稱與統一編號雙向查詢**，涵蓋所有資料種類：公司、分公司、商業、工廠、有限合夥。
+支援**公司名稱、統一編號、地址**多維度查詢，涵蓋所有資料種類：公司、分公司、商業、工廠、有限合夥。
 
 ## 快速使用
 
@@ -21,6 +21,15 @@ npx github:lyhcode/findbiz-cli search '蘿蔔科技'
 ```bash
 findbiz detail 54891351
 findbiz detail 54891351 --json          # JSON 格式輸出
+```
+
+### `address` — 地址查詢
+
+以地址查詢登記於該地址的所有公司與商業。
+
+```bash
+findbiz address '臺中市西區和龍里臺灣大道二段２號１６樓之２'
+findbiz addr '臺中市西區' --alive --json  # alias + 篩選
 ```
 
 ### `search` — 通用搜尋
@@ -58,8 +67,8 @@ findbiz taxid 90581366 --json
 | 選項 | 說明 |
 |------|------|
 | `--json` | 輸出 JSON 格式（所有指令皆支援） |
-| `--alive` | 僅顯示登記現況為「核准設立」的結果（search, name） |
-| `--type <types>` | 篩選資料種類，逗號分隔：公司,分公司,商業,工廠,有限合夥（search） |
+| `--alive` | 僅顯示登記現況為「核准設立」的結果（search, name, address） |
+| `--type <types>` | 篩選資料種類，逗號分隔：公司,分公司,商業,工廠,有限合夥（search, address） |
 
 ## Claude Code Agent Skill
 
@@ -83,6 +92,10 @@ const client = new FindBizClient();
 const result = await client.search('蘿蔔科技');
 console.log(result.total);    // 1
 console.log(result.results);  // [{ taxId: '90581366', name: '蘿蔔科技股份有限公司', ... }]
+
+// 地址查詢
+const byAddr = await client.search('臺中市西區...', { mode: 'address' });
+console.log(byAddr.results); // 登記於該地址的所有公司
 
 // 查詢詳細資料
 const detail = await client.detail('90581366');

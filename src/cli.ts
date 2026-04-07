@@ -187,6 +187,47 @@ program
   });
 
 program
+  .command('address <address>')
+  .alias('addr')
+  .description('以地址查詢登記於該地址的公司與商業')
+  .option('--json', '輸出 JSON 格式')
+  .option('--alive', '僅顯示核准設立')
+  .option('--type <types>', '資料種類（逗號分隔：公司,分公司,商業,工廠,有限合夥）')
+  .action(async (address: string, opts: { json?: boolean; alive?: boolean; type?: string }) => {
+    try {
+      const client = new FindBizClient();
+
+      const types = opts.type
+        ? (opts.type.split(',').map((t) => t.trim()) as DataType[])
+        : undefined;
+
+      const response = await client.search(address, {
+        types,
+        status: opts.alive ? 'alive' : 'all',
+        mode: 'address',
+      });
+
+      if (opts.json) {
+        const output = {
+          ...response,
+          results: response.results.map((r) => ({
+            ...r,
+            establishDate: rocToDate(r.establishDate),
+            changeDate: rocToDate(r.changeDate),
+          })),
+        };
+        console.log(JSON.stringify(output, null, 2));
+      } else {
+        console.log(`查詢地址「${address}」共 ${response.total} 筆\n`);
+        printTable(response.results);
+      }
+    } catch (error) {
+      console.error(`✗ 查詢失敗: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
   .command('detail <taxId>')
   .alias('d')
   .description('以統一編號查詢公司詳細資料（含資本額、代表人、地址、營業項目等）')

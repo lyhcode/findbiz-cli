@@ -1,12 +1,12 @@
 ---
 name: findbiz
-description: 查詢台灣商工登記公示資料（公司、分公司、商業、工廠、有限合夥）。當使用者提到統一編號、統編、營業登記、公司查詢、商業登記、工廠登記、查公司名稱、查統編，或需要驗證公司是否存在、補齊統編資料時，都應觸發此 skill。即使使用者只是說「查一下這家公司」、「幫我查統編」、「這家公司還在嗎」也應觸發。
+description: 查詢台灣商工登記公示資料（公司、分公司、商業、工廠、有限合夥）。當使用者提到統一編號、統編、營業登記、公司查詢、商業登記、工廠登記、查公司名稱、查統編、查地址有哪些公司、同地址公司，或需要驗證公司是否存在、補齊統編資料時，都應觸發此 skill。即使使用者只是說「查一下這家公司」、「幫我查統編」、「這家公司還在嗎」、「這個地址有哪些公司」也應觸發。
 tools: Bash
 ---
 
 # findbiz — 台灣商工登記查詢
 
-透過 `npx github:lyhcode/findbiz-cli` 查詢經濟部商工登記公示資料，支援公司名稱與統一編號雙向查詢。
+透過 `npx github:lyhcode/findbiz-cli` 查詢經濟部商工登記公示資料，支援公司名稱、統一編號、地址多維度查詢。
 
 ## 使用方式
 
@@ -14,6 +14,13 @@ tools: Bash
 
 ```bash
 npx -y github:lyhcode/findbiz-cli detail 12345678 --json
+```
+
+### 以地址查詢
+
+```bash
+npx -y github:lyhcode/findbiz-cli address '臺中市西區和龍里臺灣大道二段２號１６樓之２' --json
+npx -y github:lyhcode/findbiz-cli address '臺北市信義區' --alive --json  # 僅核准設立
 ```
 
 ### 以名稱查統編

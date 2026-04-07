@@ -103,10 +103,21 @@ export interface FindBizResponse {
   results: FindBizResult[];
 }
 
+/** 搜尋模式 */
+export type SearchMode =
+  | 'name'     // 名稱或統一編號 (D, 預設)
+  | 'address'  // 地址 (A)
+  | 'representative'  // 公司代表人 (N)
+  | 'director' // 公司董事或監察人或經理人 (DSM)
+  | 'english'  // 章程所訂外文公司名稱 (CNF)
+  ;
+
 /** 查詢選項 */
 export interface FindBizOptions {
   /** 資料種類篩選，預設全選 */
   types?: DataType[];
   /** 登記現況：'alive' 核准設立 | 'other' 其他 | 'all' 全部，預設 'all' */
   status?: 'alive' | 'other' | 'all';
+  /** 搜尋模式，預設 'name' */
+  mode?: SearchMode;
 }

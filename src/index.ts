@@ -8,4 +8,5 @@ export type {
   FindBizResponse,
   FindBizResult,
   Manager,
+  SearchMode,
 } from './types.js';
